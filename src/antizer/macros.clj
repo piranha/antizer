@@ -5,7 +5,7 @@
 (def antd-module 'js/antd)
 
 (defn module-name->kebab-case
-  "Converts module and sub module names from camel case to kebab case 
+  "Converts module and sub module names from camel case to kebab case
    eg: DatePicker to date-picker or Menu.Item to menu-item"
   [input]
   (->> (re-seq #"\w[a-z0-9]*" input)
@@ -32,16 +32,16 @@
     `(defn ~(get-symbol-name method-name) [form# & args#]
        (apply antizer.core/call-js-func ((keyword ~method-name) form#) args#))))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; 
-;; 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
 ;; Functions for the different react libraries
-;; 
+;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defn define-reagent-component [component]
   (let [component (name component)]
     `(def ~(get-symbol-name component)
       (reagent.core/adapt-react-class
-        (apply goog.object/getValueByKeys 
+        (apply goog.object/getValueByKeys
           ~antd-module ~(get-module-path component))))))
 
 (defn define-rum-component [component]
@@ -50,6 +50,14 @@
       (apply antizer.rum/adapt-class
         (apply goog.object/getValueByKeys
           ~antd-module ~(get-module-path component)) args#))))
+
+(defn define-uix-component [component]
+  (let [component (name component)]
+    `(defn ~(get-symbol-name component) [& args#]
+       (antizer.uix/adapt-class
+         (apply goog.object/getValueByKeys
+           ~antd-module ~(get-module-path component))
+         args#))))
 
 (defmacro export-funcs []
   `(do ~@(map define-fn antd/funcs)))
@@ -65,6 +73,9 @@
 
 (defmacro export-rum-components []
   `(do ~@(map define-rum-component antd/components)))
+
+(defmacro export-uix-components []
+  `(do ~@(map define-uix-component antd/components)))
 
 ; (defn define-component [component]
 ;   `(defn ~(get-symbol-name component) [& args#]

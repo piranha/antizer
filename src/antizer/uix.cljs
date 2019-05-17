@@ -1,12 +1,30 @@
-(ns antizer.reagent
+(ns antizer.uix
   (:refer-clojure :exclude [list])
   (:require [antizer.core :as ant]
             [goog.object :refer [getValueByKeys]]
-            [reagent.core :as r])
+            [uix.core.alpha :as uix])
   (:require-macros [antizer.macros :refer [export-funcs export-props export-form-funcs
-                                           export-reagent-components]]))
+                                           export-uix-components]]))
 
-(defn create-form
+(defn adapt-class [react-class args]
+  (let [[opts children] (if (map? (first args))
+                          [(first args) (rest args)]
+                          [nil args])
+
+        opts (->> opts
+                  (map (fn [[k v]]
+                         (if (vector? v)
+                           [k (uix/as-react v)]
+                           [k v])))
+                  (into {}))
+        els (if (sequential? (first children))
+              (map uix/as-element children)
+              children)]
+    (into
+      [:> react-class (ant/map-keys->camel-case opts :html-props true)]
+      els)))
+
+#_(defn create-form
   "Calls Form.create() decorator with the form to be created. form can be
    any hiccup form. Accepts the following options:
 
@@ -21,7 +39,7 @@
      (r/reactify-component form))
     (clj->js props)))
 
-(defn get-form
+#_(defn get-form
   "Returns the `form` created by Form.create(). This function must be called
    from within the `form` component"
   []
@@ -30,7 +48,7 @@
       (js->clj :keywordize-keys true)
       (:form)))
 
-(defn decorate-field
+#_(defn decorate-field
   "Decorate a form field, corresponds to antd's getFieldDecorator() function
    Arguments:
 
@@ -50,4 +68,4 @@
 (export-form-funcs)
 (export-funcs)
 (export-props)
-(export-reagent-components)
+(export-uix-components)
